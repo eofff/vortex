@@ -11,8 +11,10 @@ func (c *CheckScheduleService) InitService(clientService *ClientService) {
 }
 
 func (c *CheckScheduleService) StartWatcher() {
-	for {
-		c.clientService.UpdateAlgorithmStatus()
-		time.Sleep(300 * time.Second)
-	}
+	go func() {
+		for {
+			c.clientService.UpdateAlgorithmStatus()
+			time.Sleep(300 * time.Second)
+		}
+	}()
 }

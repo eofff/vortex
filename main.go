@@ -57,7 +57,7 @@ func main() {
 	clientService.InitService()
 	var checkScheduleService services.CheckScheduleService
 	checkScheduleService.InitService(&clientService)
-	go checkScheduleService.StartWatcher()
+	checkScheduleService.StartWatcher()
 
 	var clientsController controllers.ClientController
 	clientsController.Init(&clientService)
