@@ -29,7 +29,14 @@ func main() {
 
 	config.Load()
 
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", config.DbHost, config.DbPort, config.DbUser, config.DbPassword, config.DbName)
+	psqlconn := fmt.Sprintf(
+		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		config.DbHost,
+		config.DbPort,
+		config.DbUser,
+		config.DbPassword,
+		config.DbName,
+	)
 
 	db, err := sql.Open("postgres", psqlconn)
 	if err != nil {
