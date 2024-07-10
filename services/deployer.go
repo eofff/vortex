@@ -6,12 +6,6 @@ import (
 	"sync"
 )
 
-type Deployer interface {
-	CreatePod(name string) error
-	DeletePod(name string) error
-	GetPodList() ([]string, error)
-}
-
 type DeployerService struct {
 	pods      map[string]bool
 	podsMutex sync.Mutex

@@ -3,10 +3,10 @@ package services
 import "time"
 
 type CheckScheduleService struct {
-	clientService *ClientService
+	clientService IClientService
 }
 
-func (c *CheckScheduleService) InitService(clientService *ClientService) {
+func (c *CheckScheduleService) Init(clientService IClientService) {
 	c.clientService = clientService
 }
 

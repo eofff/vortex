@@ -26,7 +26,7 @@ type ClientService struct {
 	mapMutex sync.Mutex
 }
 
-func (c *ClientService) InitService() {
+func (c *ClientService) Init(algorithmStatusService IAlgorithmStatusService) {
 	c.clients = make(map[int64]Client)
 	log.Println("Client service initialized")
 }

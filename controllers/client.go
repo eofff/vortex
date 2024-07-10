@@ -9,11 +9,16 @@ import (
 )
 
 type ClientController struct {
-	clientService *services.ClientService
+	clientService services.IClientService
 }
 
-func (c *ClientController) Init(service *services.ClientService) {
+func (c *ClientController) Init(service services.IClientService, e *echo.Echo) {
 	c.clientService = service
+
+	e.POST("/", c.Add)
+	e.PUT("/", c.Update)
+	e.DELETE("/", c.Delete)
+	e.GET("/", c.UpdateStatuses)
 }
 
 func (c *ClientController) Add(ctx echo.Context) error {

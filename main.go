@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"vortex/controllers"
-	"vortex/migrations"
 	"vortex/repository"
 	"vortex/services"
 
@@ -50,21 +49,20 @@ func main() {
 		log.Fatal(err)
 	}
 
-	migrations.Migrate(db)
-	repository.Init(db)
+	var algorithmStatusRepository repository.IAlgorithmStatusRepository = &repository.AlgorithmStatusRepository{}
+	algorithmStatusRepository.Init(db)
 
-	var clientService services.ClientService
-	clientService.InitService()
+	var algorithmStatusService services.IAlgorithmStatusService = &services.AlgorithmStatusService{}
+	algorithmStatusService.Init(algorithmStatusRepository)
+
+	var clientService services.IClientService = &services.ClientService{}
+	clientService.Init(algorithmStatusService)
 	var checkScheduleService services.CheckScheduleService
-	checkScheduleService.InitService(&clientService)
+	checkScheduleService.Init(clientService)
 	checkScheduleService.StartWatcher()
 
-	var clientsController controllers.ClientController
-	clientsController.Init(&clientService)
 	e := echo.New()
-	e.POST("/", clientsController.Add)
-	e.PUT("/", clientsController.Update)
-	e.DELETE("/", clientsController.Delete)
-	e.GET("/", clientsController.UpdateStatuses)
+	var clientsController controllers.ClientController
+	clientsController.Init(clientService, e)
 	e.Logger.Fatal(e.Start(":" + config.HTTPPort))
 }
