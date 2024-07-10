@@ -55,8 +55,10 @@ func main() {
 	var algorithmStatusService services.IAlgorithmStatusService = &services.AlgorithmStatusService{}
 	algorithmStatusService.Init(algorithmStatusRepository)
 
+	var deployerService services.Deployer = &services.DeployerService{}
+
 	var clientService services.IClientService = &services.ClientService{}
-	clientService.Init(algorithmStatusService)
+	clientService.Init(algorithmStatusService, deployerService)
 	var checkScheduleService services.CheckScheduleService
 	checkScheduleService.Init(clientService)
 	checkScheduleService.StartWatcher()

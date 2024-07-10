@@ -5,6 +5,7 @@ import (
 	"log"
 	"sync"
 	"time"
+	"vortex/repository"
 )
 
 type Client struct {
@@ -22,12 +23,16 @@ type Client struct {
 }
 
 type ClientService struct {
-	clients  map[int64]Client
-	mapMutex sync.Mutex
+	algorithmStatusService IAlgorithmStatusService
+	deployerService        Deployer
+	clients                map[int64]Client
+	clientMapMutex         sync.Mutex
 }
 
-func (c *ClientService) Init(algorithmStatusService IAlgorithmStatusService) {
+func (c *ClientService) Init(algorithmStatusService IAlgorithmStatusService, deployerService Deployer) {
 	c.clients = make(map[int64]Client)
+	c.deployerService = deployerService
+	c.algorithmStatusService = algorithmStatusService
 	log.Println("Client service initialized")
 }
 
@@ -37,8 +42,8 @@ func (c *ClientService) Add(client Client) error {
 		return fmt.Errorf("create error, client with id: %d alredy exists", client.ID)
 	}
 
-	c.mapMutex.Lock()
-	defer c.mapMutex.Unlock()
+	c.clientMapMutex.Lock()
+	defer c.clientMapMutex.Unlock()
 
 	if client.ID < 0 {
 		return fmt.Errorf("create error, client id must be greater then 0, got: %d", client.ID)
@@ -56,9 +61,9 @@ func (c *ClientService) Update(client Client) error {
 		return fmt.Errorf("update error, client with id: %d not exists", client.ID)
 	}
 
-	c.mapMutex.Lock()
+	c.clientMapMutex.Lock()
 	c.clients[client.ID] = client
-	c.mapMutex.Unlock()
+	c.clientMapMutex.Unlock()
 
 	log.Printf("Client updated with id: %d", client.ID)
 
@@ -66,9 +71,9 @@ func (c *ClientService) Update(client Client) error {
 }
 
 func (c *ClientService) Delete(client Client) error {
-	c.mapMutex.Lock()
+	c.clientMapMutex.Lock()
 	delete(c.clients, client.ID)
-	c.mapMutex.Unlock()
+	c.clientMapMutex.Unlock()
 
 	log.Printf("Client deleted with id: %d", client.ID)
 
@@ -78,5 +83,82 @@ func (c *ClientService) Delete(client Client) error {
 func (c *ClientService) UpdateAlgorithmStatus() error {
 	log.Println("Update alogrithm status called")
 
+	statuses, err := c.algorithmStatusService.GetAll()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	algorithmStatuses := make(map[int64][]repository.AlgorithmStatus)
+	for _, status := range statuses {
+		_, ok := algorithmStatuses[status.ClientId]
+		if !ok {
+			algorithmStatuses[status.ClientId] = make([]repository.AlgorithmStatus, 0)
+		}
+		algorithmStatuses[status.ClientId] = append(algorithmStatuses[status.ClientId], *status)
+	}
+
+	pods, err := c.deployerService.GetPodList()
+	if err != nil {
+		log.Fatal("error while get pods")
+	}
+
+	podMap := make(map[string]bool)
+	for _, pod := range pods {
+		podMap[pod] = false
+	}
+
+	for cid := range c.clients {
+		clientStatuses, ok := algorithmStatuses[cid]
+		if !ok {
+			log.Printf("Client with id %d have no statuses in db", cid)
+			continue
+		}
+
+		for _, clientStatus := range clientStatuses {
+			c.UpdateAlgorithm(podMap, &clientStatus, "HFT")
+			c.UpdateAlgorithm(podMap, &clientStatus, "VWAP")
+			c.UpdateAlgorithm(podMap, &clientStatus, "TWAP")
+		}
+	}
+
+	for pod, val := range podMap {
+		if !val {
+			c.deployerService.DeletePod(pod)
+		}
+	}
+
 	return nil
+}
+
+func (c *ClientService) UpdateAlgorithm(
+	podMap map[string]bool,
+	clientStatus *repository.AlgorithmStatus,
+	algorithmName string,
+) {
+	podName := fmt.Sprintf("pod_%d_%s", clientStatus.Id, algorithmName)
+	_, podExists := podMap[podName]
+	algorithmEnabled := false
+
+	switch algorithmName {
+	case "HFT":
+		algorithmEnabled = clientStatus.HFT
+	case "VWAP":
+		algorithmEnabled = clientStatus.VWAP
+	case "TWAP":
+		algorithmEnabled = clientStatus.TWAP
+	default:
+		return
+	}
+
+	if algorithmEnabled {
+		if !podExists {
+			c.deployerService.CreatePod(podName)
+		}
+		podMap[podName] = true
+	} else {
+		if podExists {
+			c.deployerService.DeletePod(podName)
+			delete(podMap, podName)
+		}
+	}
 }

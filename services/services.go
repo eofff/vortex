@@ -9,7 +9,7 @@ type Deployer interface {
 }
 
 type IClientService interface {
-	Init(algorithmStatusService IAlgorithmStatusService)
+	Init(algorithmStatusService IAlgorithmStatusService, deployerService Deployer)
 	Add(client Client) error
 	Update(client Client) error
 	Delete(client Client) error
