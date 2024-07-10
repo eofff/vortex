@@ -25,7 +25,7 @@ func (a *AlgorithmStatusRepository) Init(db *sql.DB) {
 func (a *AlgorithmStatusRepository) GetAll() ([](*AlgorithmStatus), error) {
 	result := make([](*AlgorithmStatus), 0)
 
-	rows, err := a.db.Query(`SELECT "id", "client_id", "VWAP", "TWAP", "HFT" FROM AlgorithmStatus`)
+	rows, err := a.db.Query(`SELECT "id", "client_id", "vwap", "twap", "hft" FROM AlgorithmStatus`)
 
 	if err != nil {
 		return nil, err
