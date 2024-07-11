@@ -86,7 +86,7 @@ func TestUpdateAlgorithmStatus(t *testing.T) {
 	var algorithmStatusRepositoryMock repository.IAlgorithmStatusRepository = &algorithmStatusRepositoryMockStruct
 	algorithmStatusRepositoryMock.Init(nil)
 
-	var deployerMockStruct services_mock.DeployerService
+	var deployerMockStruct services_mock.DeployerServiceMock
 	deployerMockStruct.InitService()
 	var deployerMock services.Deployer = &deployerMockStruct
 

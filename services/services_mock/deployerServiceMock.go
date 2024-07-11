@@ -5,16 +5,16 @@ import (
 	"sync"
 )
 
-type DeployerService struct {
+type DeployerServiceMock struct {
 	Pods      map[string]bool
 	podsMutex sync.Mutex
 }
 
-func (d *DeployerService) InitService() {
+func (d *DeployerServiceMock) InitService() {
 	d.Pods = make(map[string]bool)
 }
 
-func (d *DeployerService) CreatePod(name string) error {
+func (d *DeployerServiceMock) CreatePod(name string) error {
 	_, ok := d.Pods[name]
 	if ok {
 		return fmt.Errorf("create pod error: pod with name %s exists", name)
@@ -27,7 +27,7 @@ func (d *DeployerService) CreatePod(name string) error {
 	return nil
 }
 
-func (d *DeployerService) DeletePod(name string) error {
+func (d *DeployerServiceMock) DeletePod(name string) error {
 	_, ok := d.Pods[name]
 	if !ok {
 		return fmt.Errorf("delete pod error: pod with name %s not exists", name)
@@ -40,7 +40,7 @@ func (d *DeployerService) DeletePod(name string) error {
 	return nil
 }
 
-func (d *DeployerService) GetPodList() ([]string, error) {
+func (d *DeployerServiceMock) GetPodList() ([]string, error) {
 	result := make([]string, len(d.Pods))
 	cnt := 0
 	for k := range d.Pods {
