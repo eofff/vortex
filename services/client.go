@@ -25,19 +25,19 @@ type Client struct {
 type ClientService struct {
 	algorithmStatusService IAlgorithmStatusService
 	deployerService        Deployer
-	clients                map[int64]Client
+	Clients                map[int64]Client
 	clientMapMutex         sync.Mutex
 }
 
 func (c *ClientService) Init(algorithmStatusService IAlgorithmStatusService, deployerService Deployer) {
-	c.clients = make(map[int64]Client)
+	c.Clients = make(map[int64]Client)
 	c.deployerService = deployerService
 	c.algorithmStatusService = algorithmStatusService
 	log.Println("Client service initialized")
 }
 
 func (c *ClientService) Add(client Client) error {
-	_, ok := c.clients[client.ID]
+	_, ok := c.Clients[client.ID]
 	if ok {
 		return fmt.Errorf("create error, client with id: %d alredy exists", client.ID)
 	}
@@ -49,20 +49,20 @@ func (c *ClientService) Add(client Client) error {
 		return fmt.Errorf("create error, client id must be greater then 0, got: %d", client.ID)
 	}
 
-	c.clients[client.ID] = client
+	c.Clients[client.ID] = client
 	log.Printf("Client added with id: %d", client.ID)
 
 	return nil
 }
 
 func (c *ClientService) Update(client Client) error {
-	_, ok := c.clients[client.ID]
+	_, ok := c.Clients[client.ID]
 	if !ok {
 		return fmt.Errorf("update error, client with id: %d not exists", client.ID)
 	}
 
 	c.clientMapMutex.Lock()
-	c.clients[client.ID] = client
+	c.Clients[client.ID] = client
 	c.clientMapMutex.Unlock()
 
 	log.Printf("Client updated with id: %d", client.ID)
@@ -72,7 +72,7 @@ func (c *ClientService) Update(client Client) error {
 
 func (c *ClientService) Delete(client Client) error {
 	c.clientMapMutex.Lock()
-	delete(c.clients, client.ID)
+	delete(c.Clients, client.ID)
 	c.clientMapMutex.Unlock()
 
 	log.Printf("Client deleted with id: %d", client.ID)
@@ -107,7 +107,7 @@ func (c *ClientService) UpdateAlgorithmStatus() error {
 		podMap[pod] = false
 	}
 
-	for cid := range c.clients {
+	for cid := range c.Clients {
 		clientStatuses, ok := algorithmStatuses[cid]
 		if !ok {
 			log.Printf("Client with id %d have no statuses in db", cid)
@@ -135,7 +135,7 @@ func (c *ClientService) UpdateAlgorithm(
 	clientStatus *repository.AlgorithmStatus,
 	algorithmName string,
 ) {
-	podName := fmt.Sprintf("pod_%d_%s", clientStatus.Id, algorithmName)
+	podName := fmt.Sprintf("pod_%d_%s", clientStatus.ClientId, algorithmName)
 	_, podExists := podMap[podName]
 	algorithmEnabled := false
 

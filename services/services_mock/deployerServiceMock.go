@@ -1,53 +1,49 @@
-package services
+package services_mock
 
 import (
 	"fmt"
-	"log"
 	"sync"
 )
 
 type DeployerService struct {
-	pods      map[string]bool
+	Pods      map[string]bool
 	podsMutex sync.Mutex
 }
 
 func (d *DeployerService) InitService() {
-	d.pods = make(map[string]bool)
+	d.Pods = make(map[string]bool)
 }
 
 func (d *DeployerService) CreatePod(name string) error {
-	_, ok := d.pods[name]
+	_, ok := d.Pods[name]
 	if ok {
 		return fmt.Errorf("create pod error: pod with name %s exists", name)
 	}
 
 	d.podsMutex.Lock()
-	d.pods[name] = true
+	d.Pods[name] = true
 	d.podsMutex.Unlock()
-
-	log.Printf("Pod %s created\n", name)
 
 	return nil
 }
 
 func (d *DeployerService) DeletePod(name string) error {
-	_, ok := d.pods[name]
+	_, ok := d.Pods[name]
 	if !ok {
 		return fmt.Errorf("delete pod error: pod with name %s not exists", name)
 	}
 
 	d.podsMutex.Lock()
-	delete(d.pods, name)
+	delete(d.Pods, name)
 	d.podsMutex.Unlock()
 
-	log.Printf("Pod %s deleted\n", name)
 	return nil
 }
 
 func (d *DeployerService) GetPodList() ([]string, error) {
-	result := make([]string, len(d.pods))
+	result := make([]string, len(d.Pods))
 	cnt := 0
-	for k := range d.pods {
+	for k := range d.Pods {
 		result[cnt] = k
 		cnt++
 	}
