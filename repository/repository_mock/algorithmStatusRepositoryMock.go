@@ -1,3 +1,5 @@
+// package for mocking repository pattern entity
+// for mocking db for tests
 package repository_mock
 
 import (

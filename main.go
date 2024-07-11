@@ -17,6 +17,7 @@ import (
 var config Config
 
 func main() {
+	// load env values from file if env variable PROD not exists
 	_, exists := os.LookupEnv("PROD")
 
 	if !exists {
@@ -44,6 +45,7 @@ func main() {
 
 	defer db.Close()
 
+	// check db connection
 	err = db.Ping()
 	if err != nil {
 		log.Fatal(err)
@@ -52,6 +54,7 @@ func main() {
 	var algorithmStatusRepository repository.IAlgorithmStatusRepository = &repository.AlgorithmStatusRepository{}
 	algorithmStatusRepository.Init(db)
 
+	// initialize services
 	var algorithmStatusService services.IAlgorithmStatusService = &services.AlgorithmStatusService{}
 	algorithmStatusService.Init(algorithmStatusRepository)
 
@@ -61,8 +64,11 @@ func main() {
 	clientService.Init(algorithmStatusService, deployerService)
 	var checkScheduleService services.CheckScheduleService
 	checkScheduleService.Init(clientService)
+
+	// start 5 minutes autochecker
 	checkScheduleService.StartWatcher()
 
+	// initialize instance of echo http server https://echo.labstack.com/
 	e := echo.New()
 	var clientsController controllers.ClientController
 	clientsController.Init(clientService, e)
